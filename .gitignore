@@ -1,0 +1,16 @@
+# Secrets, keys, and local credentials
+.env
+.env.*
+*.pem
+*.key
+*token*
+*secret*
+config.json
+
+# OS / editor artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/

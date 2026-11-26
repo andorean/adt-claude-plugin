@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "andorean-adt",
+  "description": "Official Claude Code plugins for ADT-Control (CLI and MCP workflows).",
+  "owner": {
+    "name": "Andorean"
+  },
+  "plugins": [
+    {
+      "name": "adt-cli",
+      "source": "./plugins/adt-cli",
+      "description": "Run ADT-Control tools via the adt CLI with on-demand tool discovery and minimal prompt context.",
+      "category": "operations"
+    },
+    {
+      "name": "adt-mcp",
+      "source": "./plugins/adt-mcp",
+      "description": "Connect Claude directly to ADT-Control tools over MCP (powered by adt mcp).",
+      "category": "operations"
+    }
+  ]
+}

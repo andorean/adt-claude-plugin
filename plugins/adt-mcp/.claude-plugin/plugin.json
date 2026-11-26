@@ -1,0 +1,10 @@
+{
+  "name": "adt-mcp",
+  "version": "0.1.0",
+  "description": "Connect Claude directly to ADT-Control tools over MCP using adt mcp.",
+  "author": {
+    "name": "Andorean"
+  },
+  "repository": "https://github.com/andorean/adt-claude-plugin",
+  "license": "MIT"
+}

@@ -1,0 +1,101 @@
+name: Validate Plugin Marketplace
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON files and marketplace structure
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path(".")
+          json_files = sorted(p for p in root.rglob("*.json") if ".git" not in p.parts)
+          assert json_files, "No JSON files found"
+          for path in json_files:
+              json.loads(path.read_text(encoding="utf-8"))
+              print(f"OK JSON: {path}")
+
+          marketplace = json.loads((root / ".claude-plugin/marketplace.json").read_text(encoding="utf-8"))
+          assert marketplace.get("name"), "marketplace.json missing name"
+          plugins = marketplace.get("plugins")
+          assert isinstance(plugins, list) and plugins, "marketplace.json missing plugins"
+
+          seen = set()
+          for entry in plugins:
+              name = entry["name"]
+              assert name not in seen, f"Duplicate plugin name: {name}"
+              seen.add(name)
+              source = entry["source"]
+              plugin_dir = (root / source).resolve()
+              assert plugin_dir.is_dir(), f"Plugin directory missing: {source}"
+              manifest_path = plugin_dir / ".claude-plugin/plugin.json"
+              assert manifest_path.is_file(), f"Missing plugin.json: {manifest_path}"
+              manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+              assert manifest.get("name") == name, f"Name mismatch: {manifest.get('name')} != {name}"
+              print(f"OK Plugin: {name} -> {source}")
+          PY
+
+      - name: Check POSIX shell scripts
+        run: |
+          for script in $(find plugins -type f -name '*.sh' | sort); do
+            sh -n "$script"
+            test -x "$script" || { echo "Not executable: $script"; exit 1; }
+            echo "OK Shell: $script"
+          done
+
+      - name: Public repository hygiene scan
+        run: |
+          python3 - <<'PY'
+          import re
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          patterns = [
+              ("private key block", re.compile(r"BEGIN [A-Z ]*PRIVATE KEY")),
+              ("GitHub classic/fine-grained token", re.compile(r"\b(?:ghp|gho|ghu|ghs)_[A-Za-z0-9]{20,}\b|github_pat_[A-Za-z0-9_]{20,}")),
+              ("API key token", re.compile(r"\b(?:sk-ant-|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16})\b")),
+              ("encoded JWT", re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{6,}\b")),
+              ("cluster-internal DNS", re.compile(r"\.cluster\.local\b")),
+              (
+                  "RFC 1918 private IP",
+                  re.compile(
+                      r"\b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+                      r"|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}"
+                      r"|192\.168\.\d{1,3}\.\d{1,3})\b"
+                  ),
+              ),
+          ]
+
+          out = subprocess.check_output(["git", "ls-files", "-z"])
+          files = [Path(p.decode("utf-8")) for p in out.split(b"\0") if p]
+          findings = []
+          for path in files:
+              if path.as_posix() == ".github/workflows/validate.yml" or not path.is_file():
+                  continue
+              text = path.read_text(encoding="utf-8", errors="replace")
+              for lineno, line in enumerate(text.splitlines(), 1):
+                  for label, rx in patterns:
+                      if rx.search(line):
+                          findings.append(f"{path}:{lineno}: matched {label}")
+
+          if findings:
+              print("Public hygiene check FAILED:")
+              for item in findings:
+                  print("  " + item)
+              sys.exit(1)
+          print(f"OK Hygiene: scanned {len(files)} file(s), 0 findings")
+          PY

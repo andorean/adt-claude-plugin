@@ -1,0 +1,10 @@
+{
+  "name": "adt-cli",
+  "version": "0.1.0",
+  "description": "Use ADT-Control tools in Claude Code via the adt CLI with on-demand tool discovery.",
+  "author": {
+    "name": "Andorean"
+  },
+  "repository": "https://github.com/andorean/adt-claude-plugin",
+  "license": "MIT"
+}
