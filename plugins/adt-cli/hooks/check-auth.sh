@@ -4,7 +4,11 @@
 set -u
 
 if ! command -v adt >/dev/null 2>&1; then
-  printf '%s\n' "adt CLI not found on PATH. Run /adt-cli:install to install it."
+  if [ -n "${HOME:-}" ] && [ -x "$HOME/.local/bin/adt" ]; then
+    printf '%s\n' "adt is installed in ~/.local/bin but that folder is not on PATH. Add: export PATH=\"\$HOME/.local/bin:\$PATH\" to your shell profile."
+  else
+    printf '%s\n' "adt CLI not found on PATH. Run /adt-cli:install to install it."
+  fi
   exit 0
 fi
 
