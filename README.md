@@ -91,7 +91,7 @@ In a new Claude session, ask something like *"List my ADT tools"*. Claude should
 | Existing token file | `adt login --api-url https://adt.andorean.com --keycloak-token-file <path>` | You already have an OIDC access token |
 | Local dev (no SSO) | `adt login --api-url http://localhost:8000 --flow none` | A local development server without SSO |
 
-Tokens are short-lived (about a day). When one expires, Claude asks you to sign in again; run `adt login` or `/adt-cli:login`. `adt logout` removes the token but keeps your settings.
+Tokens are short-lived (less than a day). When one expires, Claude asks you to sign in again; run `adt login` or `/adt-cli:login`. `adt logout` removes the token but keeps your settings.
 
 ## Troubleshooting
 

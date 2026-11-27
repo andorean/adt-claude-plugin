@@ -25,15 +25,22 @@ if [ -n "${ADT_CLI_TOKEN_FILE:-}" ]; then
 fi
 
 token_path=""
+expires_at=""
 cfg_path="${ADT_CONFIG:-${HOME:-}/.config/adt/config.json}"
 if [ -n "$cfg_path" ] && [ -r "$cfg_path" ]; then
   token_path=$(sed -n 's/.*"token_file"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$cfg_path" | head -n 1)
+  # Written by adt login (newer builds): when the saved token expires, in Unix seconds.
+  expires_at=$(sed -n 's/.*"expires_at"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$cfg_path" | head -n 1)
 fi
 if [ -z "$token_path" ] && [ -n "${HOME:-}" ]; then
   token_path="$HOME/.config/adt/token"
 fi
 
 if [ -n "$token_path" ] && [ -s "$token_path" ]; then
+  now=$(date +%s 2>/dev/null || echo "")
+  if [ -n "$expires_at" ] && [ -n "$now" ] && [ "$now" -ge "$expires_at" ]; then
+    printf '%s\n' "Your ADT-Control sign-in has expired. Run /adt-cli:login (or 'adt login') to sign in again."
+  fi
   exit 0
 fi
 
