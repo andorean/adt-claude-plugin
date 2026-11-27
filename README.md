@@ -6,30 +6,26 @@ Claude can only run the tools your account is allowed to use. Every call is chec
 
 ## Quickstart
 
-Setup takes three steps: install `adt`, sign in, and add the plugin to Claude. The commands below use `https://adt.andorean.com`; if your organization uses a different ADT-Control address, use that instead.
+Setup takes three steps: install `adt`, sign in, and add the plugin to Claude. The commands below use `https://adt.andorean.com`; if your organization uses a different ADT-Control address, put that in the install command instead.
 
 ### 1. Install `adt` (macOS and Linux)
 
 ```sh
-curl -fsSL https://adt.andorean.com/api/cli/install.sh | ADT_API_URL=https://adt.andorean.com sh
+curl -fsSL https://adt.andorean.com/api/cli/install.sh | sh
 ```
 
-The installer checks the download's SHA-256 checksum, then installs `adt` into `/usr/local/bin` if it can write there, otherwise into `~/.local/bin`.
+The installer checks the download's SHA-256 checksum, installs `adt` into `/usr/local/bin` if it can write there (otherwise `~/.local/bin`), and remembers the server address for `adt login`.
 
-If it prints `note: /Users/<you>/.local/bin is not on PATH`, add that folder to your PATH (zsh shown; use `~/.bashrc` for bash):
-
-```sh
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
-```
+If it says the folder `is not on PATH`, run the one command it prints, then open a new terminal.
 
 ### 2. Sign in
 
 ```sh
-adt login --api-url https://adt.andorean.com
+adt login
 adt whoami
 ```
 
-`adt login` opens your browser for single sign-on. Finish signing in there; the terminal continues by itself. Your organization is picked automatically; pass `--org <org_id>` or `--site <site_id>` to choose a different one.
+`adt login` opens your browser for single sign-on and waits up to 5 minutes. Finish signing in there; the terminal continues by itself. If it says there is no ADT-Control address yet, run `adt login --api-url https://adt.andorean.com` once. Your organization is picked automatically; pass `--org <org_id>` or `--site <site_id>` to choose a different one.
 
 ### 3. Add the plugin to Claude
 

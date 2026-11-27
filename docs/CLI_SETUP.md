@@ -7,14 +7,14 @@ This guide covers installing, configuring, upgrading, and troubleshooting the `a
 The commands in this guide use `https://adt.andorean.com`. If your organization uses a different ADT-Control address, use that instead.
 
 ```sh
-curl -fsSL https://adt.andorean.com/api/cli/install.sh | ADT_API_URL=https://adt.andorean.com sh
+curl -fsSL https://adt.andorean.com/api/cli/install.sh | sh
 ```
 
 - Supported platforms: macOS (`darwin-arm64`, `darwin-amd64`) and Linux (`linux-amd64`, `linux-arm64`).
 - The installer verifies the SHA-256 checksum against the server before installing.
 - Default install location: `/usr/local/bin` if writable, otherwise `~/.local/bin`. Override with `ADT_INSTALL_DIR`:
   ```sh
-  curl -fsSL https://adt.andorean.com/api/cli/install.sh | ADT_INSTALL_DIR="$HOME/bin" ADT_API_URL=https://adt.andorean.com sh
+  curl -fsSL https://adt.andorean.com/api/cli/install.sh | ADT_INSTALL_DIR="$HOME/bin" sh
   ```
 
 ### Add `~/.local/bin` to `PATH`
@@ -28,24 +28,28 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 ## 2. Sign In & Configuration
 
 ```sh
-# Sign in to your default organization
-adt login --api-url https://adt.andorean.com
+# Sign in to your default organization (uses the address the installer saved)
+adt login
 
 # Or select a specific organization and default site
-adt login --api-url https://adt.andorean.com --org <org_id> --site <site_id>
+adt login --org <org_id> --site <site_id>
+
+# Sign in to a different ADT-Control server
+adt login --api-url https://adt.andorean.com
 
 # Verify your active session and available sites
 adt whoami
 adt -o json whoami
 ```
 
-`adt login` writes:
+The installer creates `~/.config/adt/config.json` with the server address if the file does not exist yet. `adt login` then writes:
 - `~/.config/adt/token` (mode `0600`): your short-lived CLI token (valid for less than a day).
 - `~/.config/adt/config.json`:
   ```json
   {
     "api_url": "https://adt.andorean.com",
-    "token_file": "/Users/you/.config/adt/token"
+    "token_file": "/Users/you/.config/adt/token",
+    "expires_at": 1767225600
   }
   ```
 
@@ -119,6 +123,7 @@ adt version --check
 | `command not found: adt` right after installing | `~/.local/bin` is not on your PATH | Run the PATH command in [Section 1](#add-localbin-to-path). |
 | `adt login` says `browser login timed out waiting for callback` | You did not finish signing in, or the sign-in page showed `Invalid parameter: redirect_uri` | Run `adt login` again and finish signing in in the browser tab it opens. If the page shows the `redirect_uri` error, your administrator must add `http://127.0.0.1/*` to the Keycloak client's valid redirect URIs. |
 | `adt login --flow device` fails with `unauthorized_client` | Device sign-in is not enabled on the server | Use the default browser sign-in, or ask your administrator to enable the device authorization grant. |
+| `adt login` says `no ADT-Control address yet` | `adt` was installed by an older installer, or from a different server | Run `adt login --api-url https://adt.andorean.com` once; later sign-ins remember it. |
 | `adt login` fails with `Not Found` | The server does not support local CLI sign-in yet | Check that `https://adt.andorean.com/api/cli/auth-config` returns JSON, and ask your administrator to update the server. |
 | Claude says the token is missing or expired (exit code `3`) | Tokens last less than a day | Run `adt login` or `/adt-cli:login` again. |
 | The desktop app's `/plugin` list does not show `adt-cli` | The desktop app lists only your organization's plugin catalog | Use the `~/.claude/settings.json` setup in the [README](../README.md#3-add-the-plugin-to-claude), then start a new session. |
