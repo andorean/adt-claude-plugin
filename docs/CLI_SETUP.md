@@ -40,7 +40,7 @@ adt -o json whoami
 ```
 
 `adt login` writes:
-- `~/.config/adt/token` (mode `0600`): your short-lived CLI token (valid for about a day).
+- `~/.config/adt/token` (mode `0600`): your short-lived CLI token (valid for less than a day).
 - `~/.config/adt/config.json`:
   ```json
   {
@@ -120,5 +120,5 @@ adt version --check
 | `adt login` says `browser login timed out waiting for callback` | You did not finish signing in, or the sign-in page showed `Invalid parameter: redirect_uri` | Run `adt login` again and finish signing in in the browser tab it opens. If the page shows the `redirect_uri` error, your administrator must add `http://127.0.0.1/*` to the Keycloak client's valid redirect URIs. |
 | `adt login --flow device` fails with `unauthorized_client` | Device sign-in is not enabled on the server | Use the default browser sign-in, or ask your administrator to enable the device authorization grant. |
 | `adt login` fails with `Not Found` | The server does not support local CLI sign-in yet | Check that `https://adt.andorean.com/api/cli/auth-config` returns JSON, and ask your administrator to update the server. |
-| Claude says the token is missing or expired (exit code `3`) | Tokens last about a day | Run `adt login` or `/adt-cli:login` again. |
+| Claude says the token is missing or expired (exit code `3`) | Tokens last less than a day | Run `adt login` or `/adt-cli:login` again. |
 | The desktop app's `/plugin` list does not show `adt-cli` | The desktop app lists only your organization's plugin catalog | Use the `~/.claude/settings.json` setup in the [README](../README.md#3-add-the-plugin-to-claude), then start a new session. |
