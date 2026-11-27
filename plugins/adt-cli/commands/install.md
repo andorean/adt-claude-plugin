@@ -5,15 +5,19 @@ argument-hint: "[<api_url>]"
 
 Install or update the `adt` command-line binary.
 
-1. Determine the ADT-Control base URL:
-   - If the user passed a URL in `$ARGUMENTS`, validate it starts with `http://` or `https://` and use it.
-   - Otherwise check whether `ADT_API_URL` is set or `~/.config/adt/config.json` already provides `api_url`.
-   - If no URL is available, ask the user for their ADT-Control URL (for example `https://adt.example.com`) before running the installer.
-2. If `adt` is already installed, check `adt version` (and `adt version --check` when `ADT_API_URL` or config is present) to see if it is already up to date.
+1. Determine the ADT-Control base URL, in this order:
+   - A URL the user passed in `$ARGUMENTS` (it must start with `http://` or `https://`).
+   - `ADT_API_URL`, or `api_url` in `~/.config/adt/config.json`.
+   - Otherwise use the default, `https://adt.andorean.com`. Tell the user which URL you are using, and that they can pass a different one (for example `/adt-cli:install https://adt-staging.andorean.com`).
+2. If `adt` is already installed, run `adt version` and `ADT_API_URL="$URL" adt version --check`. If it is up to date, say so and stop.
 3. Run the checksum-verified installer:
    ```sh
    curl -fsSL "$URL/api/cli/install.sh" | ADT_API_URL="$URL" sh -s -- adt
    ```
-   *(Installs into `/usr/local/bin` if writable, otherwise `~/.local/bin`; honors `ADT_INSTALL_DIR`.)*
-4. Verify the installation with `adt version` (or `~/.local/bin/adt version`). If `~/.local/bin` is not in `PATH`, show the user the exact export line for their shell profile.
-5. Remind the user to run `/adt-cli:login` next if they have not signed in yet.
+   It installs into `/usr/local/bin` if writable, otherwise `~/.local/bin`, and honors `ADT_INSTALL_DIR`.
+4. If the installer reports `this backend does not offer adt for <platform>`, the server has no build for this computer. Tell the user to contact their ADT-Control administrator; do not try other servers.
+5. Verify with `adt version` (or `~/.local/bin/adt version`). If the installer printed `note: ... is not on PATH`, give the user the exact line for their shell profile, for zsh:
+   ```sh
+   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+   ```
+6. Remind the user to run `/adt-cli:login` next if they have not signed in yet.

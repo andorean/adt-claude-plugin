@@ -1,5 +1,7 @@
 # Using `adt mcp` in MCP Clients
 
+> **Not available yet.** The `adt` builds published today do not include the `mcp` subcommand, and the `adt-mcp` plugin is not listed in the marketplace. Use the `adt-cli` plugin (see the [README](../README.md)) until a release with `adt mcp` ships. You can check your build with `adt mcp --help`.
+
 The `adt` binary can run as a local stdio Model Context Protocol (MCP) server (`adt mcp`), allowing MCP-compatible clients to call ADT-Control tools natively using your existing `adt login` session.
 
 > **Prerequisite:** Requires an `adt` build that includes the `mcp` subcommand (`adt mcp --help`). Install `adt` and run `adt login` first (see [CLI_SETUP.md](./CLI_SETUP.md)).

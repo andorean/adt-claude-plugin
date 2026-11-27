@@ -1,98 +1,121 @@
-# ADT-Control Plugins for Claude
+# ADT-Control Plugin for Claude
 
-Official Claude Code plugin marketplace for **ADT-Control**. Connect Claude to your ADT-Control organization's tools as the signed-in user using either the **CLI workflow (`adt-cli`)** or the **MCP workflow (`adt-mcp`)**.
+Official Claude Code plugin for **ADT-Control**. It lets Claude discover and run your organization's ADT-Control tools as you, the signed-in user, through the `adt` command-line client.
 
-## Choosing a Plugin
-
-Install **one** of the two plugins below (avoid enabling both at once so Claude does not see duplicate tool paths):
-
-| Feature | `adt-cli` | `adt-mcp` |
-| :--- | :--- | :--- |
-| **How Claude runs tools** | Shell commands (`adt tools list`, `adt call ...`) | Native structured MCP tool calls (`adt mcp`) |
-| **Context footprint** | Minimal (tools discovered on demand) | Compact (`--mode meta`) or full schemas (`--mode direct`) |
-| **Tool call UX** | Uses Claude Code Bash permission | Native MCP tool approval (no Bash prompt per call) |
-| **Works in other clients** | Any shell-capable coding agent | Claude Code, Claude Desktop, Cursor, Windsurf |
-| **CLI build requirement** | Works with any `adt` build supporting `adt login` | Requires an `adt` build that includes the `mcp` subcommand |
-
----
+Claude can only run the tools your account is allowed to use. Every call is checked by the ADT-Control server.
 
 ## Quickstart
 
-### 1. Install the `adt` binary (macOS & Linux)
+Setup takes three steps: install `adt`, sign in, and add the plugin to Claude. The commands below use `https://adt.andorean.com`; if your organization uses a different ADT-Control address, use that instead.
 
-Replace `https://adt.example.com` with your ADT-Control URL:
+### 1. Install `adt` (macOS and Linux)
 
 ```sh
-export ADT_API_URL="https://adt.example.com"
-curl -fsSL "$ADT_API_URL/api/cli/install.sh" | ADT_API_URL="$ADT_API_URL" sh -s -- adt
+curl -fsSL https://adt.andorean.com/api/cli/install.sh | ADT_API_URL=https://adt.andorean.com sh
 ```
 
-The installer verifies the binary's SHA-256 checksum before installing into `/usr/local/bin` (if writable) or `~/.local/bin`.
+The installer checks the download's SHA-256 checksum, then installs `adt` into `/usr/local/bin` if it can write there, otherwise into `~/.local/bin`.
+
+If it prints `note: /Users/<you>/.local/bin is not on PATH`, add that folder to your PATH (zsh shown; use `~/.bashrc` for bash):
+
+```sh
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+```
 
 ### 2. Sign in
 
 ```sh
-adt login --api-url https://adt.example.com --org <org_id> --site <site_id>
+adt login --api-url https://adt.andorean.com
 adt whoami
 ```
 
-`adt login` opens your browser for SSO login, saves a short-lived token (`0600`) to `~/.config/adt/token`, and writes `~/.config/adt/config.json`. The raw token is never printed.
+`adt login` opens your browser for single sign-on. Finish signing in there; the terminal continues by itself. Your organization is picked automatically; pass `--org <org_id>` or `--site <site_id>` to choose a different one.
 
-### 3. Add the marketplace and install a plugin in Claude Code
+### 3. Add the plugin to Claude
 
-Inside Claude Code:
+Pick the option that matches how you use Claude.
+
+**Claude Code in a terminal**
 
 ```text
 /plugin marketplace add andorean/adt-claude-plugin
-
-# Install ONE of the two plugins:
 /plugin install adt-cli@andorean-adt
-# or
-/plugin install adt-mcp@andorean-adt
 ```
 
-Once installed, Claude automatically discovers and invokes the tools your user account is authorized to run.
+Or from your shell:
+
+```sh
+claude plugin marketplace add andorean/adt-claude-plugin
+claude plugin install adt-cli@andorean-adt
+```
+
+**Claude desktop app (Code tab)**
+
+The desktop app's `/plugin` list only shows your organization's plugin catalog, so it cannot add this marketplace directly. Either ask your Claude organization admin to add `andorean/adt-claude-plugin` to the organization's plugin catalog, or add these lines to `~/.claude/settings.json` (create the file if it does not exist, and merge with anything already in it):
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "andorean-adt": {
+      "source": { "source": "github", "repo": "andorean/adt-claude-plugin" }
+    }
+  },
+  "enabledPlugins": {
+    "adt-cli@andorean-adt": true
+  }
+}
+```
+
+Then start a new session. Plugins load when a session starts.
+
+### Check that it works
+
+In a new Claude session, ask something like *"List my ADT tools"*. Claude should run `adt whoami` and `adt tools list`. Typing `/adt-cli:` shows the plugin's commands.
 
 ---
 
-## Authentication Flows
+## Slash Commands
 
-`adt login` supports four flows via `--flow`:
+- `/adt-cli:install [<url>]`: install or update `adt`.
+- `/adt-cli:login [flags]`: sign in with `adt login` and confirm with `adt whoami`.
+- `/adt-cli:logout`: remove the saved token.
+
+## Sign-in Options
+
+`adt login` supports these flows via `--flow`:
 
 | Flow | Command | When to use |
 | :--- | :--- | :--- |
-| Browser SSO *(default)* | `adt login --api-url https://adt.example.com` | Standard desktop/laptop login with browser PKCE callback |
-| Device code | `adt login --api-url https://adt.example.com --flow device` | Headless terminal or SSH session |
-| Existing OIDC token file | `adt login --api-url https://adt.example.com --keycloak-token-file <path>` | Exchange an existing OIDC access token file |
-| Local dev (no SSO) | `adt login --api-url http://localhost:8000 --flow none` | Local development server running without SSO |
+| Browser SSO *(default)* | `adt login --api-url https://adt.andorean.com` | Normal laptop or desktop sign-in |
+| Device code | `adt login --api-url https://adt.andorean.com --flow device` | Headless or SSH sessions, if your server enables it |
+| Existing token file | `adt login --api-url https://adt.andorean.com --keycloak-token-file <path>` | You already have an OIDC access token |
+| Local dev (no SSO) | `adt login --api-url http://localhost:8000 --flow none` | A local development server without SSO |
 
-Run `adt logout` at any time to remove the local token file while keeping `~/.config/adt/config.json`.
+Tokens are short-lived (about a day). When one expires, Claude asks you to sign in again; run `adt login` or `/adt-cli:login`. `adt logout` removes the token but keeps your settings.
 
----
+## Troubleshooting
 
-## Included Slash Commands
+See [CLI Setup & Troubleshooting](docs/CLI_SETUP.md#6-common-problems) for fixes to common problems, such as a sign-in that times out or a missing build for your computer.
 
-Both plugins provide convenience slash commands inside Claude Code:
+## For ADT-Control Administrators
 
-- `/adt-cli:install` or `/adt-mcp:install` — Install or update the `adt` binary via `install.sh`.
-- `/adt-cli:login` or `/adt-mcp:login` — Run `adt login` and verify your session with `adt whoami`.
-- `/adt-cli:logout` or `/adt-mcp:logout` — Remove the saved local token file.
+Before sharing this plugin with users, check that the server is ready:
 
----
+- `https://<your-server>/api/cli/dist/checksums.txt` lists builds for every platform your users have (`darwin-arm64`, `darwin-amd64`, `linux-amd64`, `linux-arm64`).
+- `https://<your-server>/api/cli/auth-config` returns JSON with `"cli_enabled": true`.
+- The Keycloak client named in `auth-config` allows `http://127.0.0.1/*` as a valid redirect URI. Without it, browser sign-in times out.
+- Optional: set `ADT_CLI_PUBLIC_URL` on the backend so the install script works without `ADT_API_URL`.
 
 ## Security & Privacy
 
-- **Backend-enforced authorization:** Every call is checked server-side against your signed-in identity, organization, site, enabled applications, and role permissions.
-- **Short-lived, isolated tokens:** Local tokens are stored with `0600` permissions in `~/.config/adt/token`, scoped to one organization, and never embedded in plugin or config files.
-- **Checksum-verified installs:** The official install script checks SHA-256 hashes before installing any binary.
-- **No secret exposure:** The included skills and hooks never read or print your token file.
+- **Server-side authorization:** every call is checked against your identity, organization, site, enabled applications, and role permissions.
+- **Short-lived local tokens:** stored with `0600` permissions in `~/.config/adt/token`, scoped to one organization, and never placed in plugin or config files.
+- **Checksum-verified installs:** the install script checks SHA-256 hashes before installing anything.
+- **No secret exposure:** the plugin's skill and hook never read or print your token.
 
----
+## MCP Support
 
-## Further Documentation
-
-- [CLI Setup & Troubleshooting](docs/CLI_SETUP.md)
-- [Using `adt mcp` in Claude Desktop, Cursor, and Windsurf](docs/MCP_CLIENTS.md)
+An MCP version (`adt mcp`) is planned but not yet included in published `adt` builds. See [MCP clients](docs/MCP_CLIENTS.md).
 
 ## License
 
