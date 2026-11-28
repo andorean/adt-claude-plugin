@@ -4,6 +4,34 @@ Official Claude Code plugin for **ADT-Control**. It lets Claude discover and run
 
 Claude can only run the tools your account is allowed to use. Every call is checked by the ADT-Control server.
 
+## Easiest Setup: Let Claude Do It
+
+Paste this prompt into Claude Code, or the Code tab of the Claude desktop app, on macOS or Linux. Claude runs every step and asks your permission for each command; the only thing you do yourself is sign in in the browser.
+
+```text
+Set up ADT-Control tools for me on this computer. Run each step yourself, in order, and stop and tell me if any step fails.
+
+1. Install the adt CLI:
+   curl -fsSL https://adt.andorean.com/api/cli/install.sh | sh
+   If the output says a folder "is not on PATH", run the exact `echo 'export PATH=...' >> ~/.zshrc` line it printed (use ~/.bashrc if my shell is bash). For the rest of this session, call adt by its full path, for example ~/.local/bin/adt.
+
+2. Check it with: adt version
+
+3. Sign me in: run `adt login` in the background, because it waits up to 5 minutes for me. Tell me to finish signing in in the browser tab that opens. When it finishes, run `adt whoami` and tell me my user and organization. Never read, print or copy ~/.config/adt/token.
+
+4. Install the Claude plugin. Find the claude command: use `command -v claude`; if that finds nothing on macOS, use the newest match of
+   ls -td "$HOME/Library/Application Support/Claude/claude-code"/*/*/claude.app/Contents/MacOS/claude | head -1
+   Then run, with that path:
+   <claude> plugin marketplace add andorean/adt-claude-plugin
+   <claude> plugin install adt-cli@andorean-adt
+   <claude> plugin list
+   and confirm adt-cli@andorean-adt shows as enabled.
+
+5. Finish by telling me to start a new Claude session. There, typing /adt-cli: shows the plugin's commands, and I can ask things like "list my ADT tools".
+```
+
+If your organization uses a different ADT-Control address, replace `https://adt.andorean.com` in step 1. To do the same steps by hand, follow the Quickstart below.
+
 ## Quickstart
 
 Setup takes three steps: install `adt`, sign in, and add the plugin to Claude. The commands below use `https://adt.andorean.com`; if your organization uses a different ADT-Control address, put that in the install command instead.
@@ -47,22 +75,15 @@ claude plugin install adt-cli@andorean-adt
 
 **Claude desktop app (Code tab)**
 
-The desktop app's `/plugin` list only shows your organization's plugin catalog, so it cannot add this marketplace directly. Either ask your Claude organization admin to add `andorean/adt-claude-plugin` to the organization's plugin catalog, or add these lines to `~/.claude/settings.json` (create the file if it does not exist, and merge with anything already in it):
+The desktop app's `/plugin` list only shows your organization's plugin catalog, so it cannot add this marketplace. The app ships the `claude` command inside its own folder, though, so run the same commands with that path (macOS):
 
-```json
-{
-  "extraKnownMarketplaces": {
-    "andorean-adt": {
-      "source": { "source": "github", "repo": "andorean/adt-claude-plugin" }
-    }
-  },
-  "enabledPlugins": {
-    "adt-cli@andorean-adt": true
-  }
-}
+```sh
+CLAUDE=$(ls -td "$HOME/Library/Application Support/Claude/claude-code"/*/*/claude.app/Contents/MacOS/claude | head -1)
+"$CLAUDE" plugin marketplace add andorean/adt-claude-plugin
+"$CLAUDE" plugin install adt-cli@andorean-adt
 ```
 
-Then start a new session. Plugins load when a session starts.
+Then start a new session. Plugins load when a session starts. Alternatively, your Claude organization admin can add `andorean/adt-claude-plugin` to the organization's plugin catalog.
 
 ### Check that it works
 
