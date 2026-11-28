@@ -126,4 +126,4 @@ adt version --check
 | `adt login` says `no ADT-Control address yet` | `adt` was installed by an older installer, or from a different server | Run `adt login --api-url https://adt.andorean.com` once; later sign-ins remember it. |
 | `adt login` fails with `Not Found` | The server does not support local CLI sign-in yet | Check that `https://adt.andorean.com/api/cli/auth-config` returns JSON, and ask your administrator to update the server. |
 | Claude says the token is missing or expired (exit code `3`) | Tokens last less than a day | Run `adt login` or `/adt-cli:login` again. |
-| The desktop app's `/plugin` list does not show `adt-cli` | The desktop app lists only your organization's plugin catalog | Use the `~/.claude/settings.json` setup in the [README](../README.md#3-add-the-plugin-to-claude), then start a new session. |
+| The desktop app's `/plugin` list does not show `adt-cli` | The desktop app lists only your organization's plugin catalog | Install it with the `claude` command bundled in the app, as shown in the [README](../README.md#3-add-the-plugin-to-claude), then start a new session. |
